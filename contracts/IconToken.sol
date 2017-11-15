@@ -1,65 +1,58 @@
 pragma solidity ^0.4.10;
 
 import './StandardToken.sol';
-import './SafeMath.sol';
+import "../library/utils/SafeMath.sol";
 
 contract IconToken is StandardToken{
-    /*
-     * Token name
-     */
+
+    // Token name
     string public constant name = "ICON Token";
 
-    /*
-     * Token symbol
-     */
+    // Token symbol
     string public constant symbol = "ICON";
 
-    /*
-     * Decimal​ ​Places​ ​per​ ​Token
-     */
-    uint public constant decimals = 18;
+    // Decimal​ ​Places​ ​per​ ​Token
+    uint public constant DECIMALS = 18;
 
-    /*
-     * Owner contract address
-     */
-    address public ownerContract;
+    // Total supply = 1 000 000 000 Icon tokens
+    uint public constant INITIAL_TOTAL_SUPPLY = 1000000000 * DECIMALS;
 
-    // 2 000 000 000 Icon tokens
-    uint public constant TOTAL_SUPPLY = 1000000000000000000000000000;
+    // Owner contract address
+    address public owner;
 
 
     /*
-     * Modifier for owner Contract which regulates tokens emission
+     * Modifier for owner which regulates tokens emission
      */
-    modifier onlyOwnerContract() {
+    modifier onlyOwner() {
         // only ICO contract is allowed to proceed
-        require(msg.sender == ownerContract);
+        require(msg.sender == owner);
         _;
     }
 
     /*
      * Constructor
      */
-    function IconToken(address _ownerContract) {
-        assert(_ownerContract != 0x0);
-        ownerContract = _ownerContract;
-        totalSupply = TOTAL_SUPPLY;
+    function IconToken(address _owner) {
+        assert(_owner != 0x0);
+        owner = _owner;
+        totalSupply = INITIAL_TOTAL_SUPPLY;
     }
 
-    /// @dev Burns tokens from address. Can only be applied by ownerContract
-    /// @param _from Address of account, from which will be burned tokens
+    /// @dev Burns tokens from address. Can only be applied by owner
+    /// @param _from Address of account, from which tokens will be burned
     /// @param _value Amount of tokens, that will be burned
-    function burn(address _from, uint _value) onlyOwnerContract {
+    function burn(address _from, uint _value) onlyOwner {
         assert(_from != 0x0);
         require(_value > 0);
 
         balances[_from] = SafeMath.sub(balances[_from], _value);
     }
 
-    /// @dev Adds tokens to address. Can only be applied by ownerContract
+    /// @dev Adds tokens to address. Can only be applied by owner
     /// @param _to Address of account to which the tokens will pass
     /// @param _value Amount of tokens
-    function emit(address _to, uint _value) onlyOwnerContract {
+    function emit(address _to, uint _value) onlyOwner {
         assert(_to != 0x0);
         require(_value > 0);
 
@@ -71,10 +64,10 @@ contract IconToken is StandardToken{
         }
     }
 
-    /// @dev Change owner Contract. Can only be applied by ownerContract
-        /// @param _newOwnerContract Address of a new Owner Contract
-    function changeOwnerContract(address _newOwnerContract) onlyOwnerContract{
-        ownerContract = _newOwnerContract;
+    /// @dev Change owner. Can only be applied by current owner
+    /// @param _newOwner Address of a new Owner
+    function changeOwner(address _newOwner) onlyOwner{
+        owner = _newOwner;
     }
 
 }
