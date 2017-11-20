@@ -14,7 +14,7 @@ contract PreIconContract is Pausable {
     // ICO end date
     uint public endDate;
 
-    // Address of account to which Ethers will be tranfered in case of successful ICO
+    // Address to which Ethers will be transfered in case of successful ICO
     address public wallet;
 
     uint public constant DECIMALS = 18;
@@ -22,7 +22,7 @@ contract PreIconContract is Pausable {
     // 50 000 000 PreSale​ ​allocated​ Icon ​Tokens
     uint public constant PRE_ICON_SUPPLY_LIMIT = 50000000 * DECIMALS;
 
-    // Token price on Presale ( 0.00014 ETH )
+    // Token price on Presale ( 1ICON = 0.00014 ETH )
     uint public constant TOKEN_PRICE = 7000;
 
     // Sold tokens counter
@@ -40,17 +40,24 @@ contract PreIconContract is Pausable {
     // Icon Token address
     IconToken public iconToken;
 
+    // Presale finalized
+    bool public finished;
 
+    /*
+     * Events
+     */
     event TokensPurchased(address indexed from, uint indexed date, uint etherSpent, uint tokensPurchased);
 
-    event PreSaleFinished(uint date);
+    event PresaleFinished(uint date);
+
+    /// Refund was processed for a contributor
+    event Refund(address indexed to, uint indexed date, uint value);
 
     /*
      * Modifiers
      */
-
     modifier isRunning() {
-        require(now >= startDate && now <= endDate && etherRaised < hardCap);
+        require(now >= startDate && now <= endDate && !finished);
         _;
     }
 
@@ -59,10 +66,14 @@ contract PreIconContract is Pausable {
         _;
     }
 
+    modifier hardCapNotReached() {
+        require(hardCap > etherRaised);
+        _;
+    }
+
     /*
      * Constructor
      */
-
     function PreIconContract(address _wallet, uint _startDate, uint _endDate, uint _softCap, uint _hardCap) {
         assert(_wallet != 0x0);
         assert(_startDate != 0);
@@ -70,6 +81,7 @@ contract PreIconContract is Pausable {
         assert(_endDate > _startDate);
         assert(_softCap > 0);
         assert(_hardCap > 0);
+        assert(_hardCap > _softCap);
 
         wallet = _wallet;
         startDate = _startDate;
@@ -80,36 +92,45 @@ contract PreIconContract is Pausable {
     }
 
     /// @dev Buy tokens on Pre sale
-    function() payable isRunning isNotPaused {
+    function() payable isRunning isNotPaused hardCapNotReached{
         assert(msg.sender != 0x0);
         require(msg.value > 0);
 
         address _buyer = msg.sender;
         uint _value = msg.value;
 
-        uint tokensToEmit = _value * TOKEN_PRICE;
+        uint tokens = calculateTokens(_value);
 
-        // 25% bonus on pre-sale
-        tokensToEmit += (tokensToEmit / 100) * 25;
+        assert(tokens > 0);
 
-        require(SafeMath.add(soldTokens, tokensToEmit) <= PRE_ICON_SUPPLY_LIMIT);
+        iconToken.mint(_buyer, tokens);
 
-        iconToken.emit(_buyer, tokensToEmit);
-
-        soldTokens = SafeMath.add(soldTokens, tokensToEmit);
+        soldTokens = SafeMath.add(soldTokens, tokens);
 
         etherRaised = SafeMath.add(etherRaised, _value);
 
         TokensPurchased(_buyer, now, _value, soldTokens);
     }
 
-
-    /// @dev Finalize Tokens preSale
+    /// @dev Finalize Tokens presale
     function finalizePresale() onlyOwner softCapReached {
         if (this.balance > 0) {
             wallet.transfer(this.balance);
-            pause();
         }
-        PreSaleFinished(now);
+        finished = true;
+        PresaleFinished(now);
+    }
+
+    /// @dev Calculating tokens count
+    /// @param value Eth value
+    /// @return tokens calculated tokens
+    function calculateTokens(uint value) internal returns (uint tokens) {
+        tokens = value * TOKEN_PRICE;
+
+        // 25% bonus on pre-sale
+        tokens += (tokens / 100) * 25;
+
+        require(SafeMath.add(soldTokens, tokens) <= PRE_ICON_SUPPLY_LIMIT);
+        return tokens;
     }
 }
