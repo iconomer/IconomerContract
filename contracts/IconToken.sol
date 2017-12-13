@@ -4,7 +4,7 @@ import './StandardToken.sol';
 import "../library/utils/SafeMath.sol";
 
 
-contract IconToken is StandardToken{
+contract IconToken is StandardToken, Ownable{
 
     // Token name
     string public constant name = "ICON Token";
@@ -18,25 +18,11 @@ contract IconToken is StandardToken{
     // Total supply = 1 000 000 000 Icon tokens
     uint public constant INITIAL_TOTAL_SUPPLY = 1000000000 * DECIMALS;
 
-    // Owner contract address
-    address public owner;
-
-
-    /*
-     * Modifier for owner which regulates tokens emission
-     */
-    modifier onlyOwner() {
-        // only ICO contract is allowed to proceed
-        require(msg.sender == owner);
-        _;
-    }
-
     /*
      * Constructor
      */
-    function IconToken(address _owner) {
-        assert(_owner != 0x0);
-        owner = _owner;
+    function IconToken() {
+        totalSupply = INITIAL_TOTAL_SUPPLY;
     }
 
     /// @dev Create new tokens and allocate them to an address. Can only be applied by current owner
@@ -56,10 +42,15 @@ contract IconToken is StandardToken{
         Transfer(0, _to, _value);
     }
 
-    /// @dev Change owner. Can only be applied by current owner
-    /// @param _newOwner Address of a new Owner
-    function changeOwner(address _newOwner) onlyOwner{
-        owner = _newOwner;
-    }
+    /// @dev Burn tokens from given address. Can only be applied by current owner
+    /// @param _from Address from which tokens must be burned
+    /// @param _value  Number of tokens to issue.
+    function burn(address _from, uint _value) onlyOwner {
+        assert(_from != 0x0);
+        require(_value > 0);
 
+        balances[_from] = SafeMath.sub(balances[_from], _value);
+
+        Transfer(_from, 0, _value);
+    }
 }

@@ -1,4 +1,4 @@
-var PreIconContract = artifacts.require("./PreIconContract.sol");
+var PreIconContract = artifacts.require("./IconPresaleContract.sol");
 
 module.exports = function(deployer) {
     deployer.deploy(PreIconContract,

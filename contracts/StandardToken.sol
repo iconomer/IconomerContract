@@ -1,6 +1,6 @@
 pragma solidity ^0.4.10;
 
-import '../library/interface/ERC20Interface.sol';
+import '../library/ERC20Interface.sol';
 
 
 contract StandardToken is ERC20Interface {

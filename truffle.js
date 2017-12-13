@@ -12,9 +12,12 @@ module.exports = {
     networks: {
         "development": {
             network_id: "default",
-            host: '127.0.0.1',
+            host: 'localhost',
             port: 8545,
             gas: 4000000,
+            /**
+             * From address must be changed
+             */
             from: '0x9957A3BcA6D3E1F489195330d26911CB00356f6E'
         }
     },

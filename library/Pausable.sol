@@ -1,7 +1,7 @@
 pragma solidity ^0.4.10;
 
 
-import "../ownership/Ownable.sol";
+import "./Ownable.sol";
 
 
 /**
