@@ -15,6 +15,7 @@ module.exports = {
             host: 'localhost',
             port: 8545,
             gas: 4000000,
+            gasPrice: 1000000000,
             /**
              * From address must be changed
              */
